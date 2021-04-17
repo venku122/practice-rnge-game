@@ -1,25 +1,21 @@
-import React,  { Component } from 'react';
+import React,  { Component, FC } from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Matter from 'matter-js';
 import { GameEngine } from 'react-native-game-engine';
 import Constants from './Constants';
 import Physics from './Physics';
-import Bird from './Bird';
+// import Bird from './Bird';
+import Mummy from './Mummy';
 import Wall from './Wall';
 import { generatePipes } from './PipeGenerator';
+import { EntityMap, GameEngineMethods } from './types';
+import Shooting from './Shooting';
  
 
 type State = {
   running: boolean;
 }
 
-// not included in the official types :/
-interface GameEngineMethods {
-  start: () => void;
-  stop: () => void;
-  swap: (newEntities: {} | Promise<any> ) => void;
-  dispatch: (event: any) => void;
-}
 export default class App extends Component<void, State> {
 
   private gameEngine: GameEngineMethods;
@@ -37,11 +33,11 @@ export default class App extends Component<void, State> {
     this.entities = this.setupWorld();
   }
 
-  setupWorld = (): {} => {
+  setupWorld = (): EntityMap => {
     let engine = Matter.Engine.create({ enableSleeping: false });
     let world = engine.world;
 
-    let bird = Matter.Bodies.rectangle(Constants.MAX_WIDTH / 4, Constants.MAX_HEIGHT / 2, 50, 50);
+    let mummy = Matter.Bodies.rectangle(Constants.MAX_WIDTH / 4, Constants.MAX_HEIGHT / 2, 50, 50);
 
     let floor = Matter.Bodies.rectangle(Constants.MAX_WIDTH / 2, Constants.MAX_HEIGHT - 25, Constants.MAX_WIDTH, 50, { isStatic: true });
     let ceiling = Matter.Bodies.rectangle(Constants.MAX_WIDTH / 2, 25, Constants.MAX_WIDTH, 50, { isStatic: true });
@@ -56,22 +52,27 @@ export default class App extends Component<void, State> {
     let pipe3 = Matter.Bodies.rectangle( Constants.MAX_WIDTH * 2 - (Constants.PIPE_WIDTH / 2), pipe3Height / 2, Constants.PIPE_WIDTH, pipe3Height, { isStatic: true });
     let pipe4 = Matter.Bodies.rectangle( Constants.MAX_WIDTH * 2 - (Constants.PIPE_WIDTH / 2), Constants.MAX_HEIGHT - (pipe4Height / 2), Constants.PIPE_WIDTH, pipe4Height, { isStatic: true });
 
-    Matter.World.add(world, [bird, floor, ceiling, pipe1, pipe2, pipe3, pipe4]);
+    Matter.World.add(world, [mummy, floor, ceiling, pipe1, pipe2, pipe3, pipe4]);
 
+    /*
     Matter.Events.on(engine, 'collisionStart', (event) => {
       const { pairs } = event;
       this.gameEngine.dispatch({ type: 'game-over' });
     });
+    */
 
     return {
-      physics: { engine, world },
-      bird: { body: bird, size: [50, 50], color: 'red', renderer: Bird},
-      floor: { body: floor, size: [Constants.MAX_WIDTH, 50], color: 'green', renderer: Wall},
-      ceiling: { body: ceiling, size: [Constants.MAX_WIDTH, 50], color: 'green', renderer: Wall},
+      physics: { type: 'physics', engine, world, id: 'physics' },
+      shooting: { type: 'shooting', engine, world, id: 'shooting' },
+      mummy: { type: 'object',  body: mummy, size: [50, 50], color: 'red', renderer: Mummy, id: 'mummy', },
+      floor: { type: 'object', body: floor, size: [Constants.MAX_WIDTH, 50], color: 'green', renderer: Wall, id: 'floor' },
+      ceiling: { type: 'object', body: ceiling, size: [Constants.MAX_WIDTH, 50], color: 'green', renderer: Wall, id: 'ceiling' },
+      /*
       pipe1: { body: pipe1, size: [Constants.PIPE_WIDTH, pipe1Height], color: "green", renderer: Wall },
       pipe2: { body: pipe2, size: [Constants.PIPE_WIDTH, pipe2Height], color: "green", renderer: Wall },
       pipe3: { body: pipe3, size: [Constants.PIPE_WIDTH, pipe3Height], color: "green", renderer: Wall },
       pipe4: { body: pipe4, size: [Constants.PIPE_WIDTH, pipe4Height], color: "green", renderer: Wall }
+      */
     };
   }
 
@@ -100,7 +101,7 @@ export default class App extends Component<void, State> {
             ref={(ref) => { this.gameEngine = ref}}
             style={styles.gameContainer}
             running={this.state.running}
-            systems={[Physics]}
+            systems={[Physics, Shooting]}
             entities={this.entities}
             onEvent={this.onEvent}
           >

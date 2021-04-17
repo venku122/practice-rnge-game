@@ -7,7 +7,7 @@ type WallProps = {
   color: string;
 }
 
-const Wall: FC<WallProps> = ({ size, body, color }: WallProps): ReactElement => {
+const Bullet: FC<WallProps> = ({ size, body, color }: WallProps): ReactElement => {
 
   const [width, height] = size;
   const x = body.position.x - width / 2;
@@ -26,4 +26,4 @@ const Wall: FC<WallProps> = ({ size, body, color }: WallProps): ReactElement => 
   )
 }
 
-export default Wall;
+export default Bullet;
